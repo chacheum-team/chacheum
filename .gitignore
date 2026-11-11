@@ -1,0 +1,21 @@
+# Gradle·Android Studio
+.gradle/
+build/
+*/build/
+local.properties
+.idea/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+
+# 서명 키와 API 키는 올리지 않음
+*.jks
+*.keystore
+keystore.properties
+secrets.properties
+
+# OS·기록
+.DS_Store
+Thumbs.db
+*.log
