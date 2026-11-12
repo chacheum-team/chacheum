@@ -92,13 +92,15 @@ class MainActivity : Activity() {
                 Screen.DRIVE -> driveView()
             }
         }
+        // 넓은 창(가로로 합친 창)에서는 내용 폭을 880dp로 묶어 한눈에 읽히게 함
+        val width = if (resources.configuration.screenWidthDp > 960) ui.dp(880) else FrameLayout.LayoutParams.MATCH_PARENT
         val scrollable = App.screen != Screen.DRIVE && !drivingNow
         if (scrollable) {
             val sv = ScrollView(this).apply { isVerticalScrollBarEnabled = false }
-            sv.addView(view)
+            sv.addView(view, FrameLayout.LayoutParams(width, FrameLayout.LayoutParams.WRAP_CONTENT))
             content.addView(sv)
         } else {
-            content.addView(view)
+            content.addView(view, FrameLayout.LayoutParams(width, FrameLayout.LayoutParams.MATCH_PARENT))
         }
         drawLog()
     }
@@ -143,7 +145,7 @@ class MainActivity : Activity() {
         val n = if (logOpen) 14 else 3
         App.log.entries.take(n).forEach { e ->
             logBox.addView(
-                ui.text("${e.time}  ${e.src} · ${e.text}", 15f, if (e.src == "판정" || e.src == "모델") C.TEXT2 else C.TEXT3).apply {
+                ui.text("${e.time}  ${e.src} · ${e.text}", 16f, if (e.src == "판정" || e.src == "모델") C.TEXT2 else C.TEXT3).apply {
                     maxLines = 1
                     ellipsize = android.text.TextUtils.TruncateAt.END
                 },
