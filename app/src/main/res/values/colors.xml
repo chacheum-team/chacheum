@@ -1,4 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 차츰 디자인 시스템 역할 토큰(주간). Pleos Connect 색 값을 그대로 씀. -->
 <resources>
-    <color name="ic_launcher_background">#13294B</color>
+    <color name="bg">#F7F8FA</color>
+    <color name="card">#FFFFFF</color>
+    <color name="raised">#FFFFFF</color>
+    <color name="inset">#EDEEF2</color>
+    <color name="line">#E0E1E6</color>
+    <color name="line_strong">#686A72</color>
+    <color name="text">#131417</color>
+    <color name="text2">#D6131417</color>
+    <color name="text3">#A3131417</color>
+    <color name="text_off">#52131417</color>
+    <color name="cta">#44464E</color>
+    <color name="cta_pressed">#313236</color>
+    <color name="on_cta">#FFFFFF</color>
+    <color name="btn">#0D131417</color>
+    <color name="btn_pressed">#1A131417</color>
+    <color name="btn_on">#FFFFFF</color>
+    <color name="brand">#002C5F</color>
+    <color name="logo_mark">#00AAD2</color>
+    <color name="on_brand">#FFFFFF</color>
+    <color name="accent">#002C5F</color>
+    <color name="accent_weak">#1A002C5F</color>
+    <color name="accent_text">#002C5F</color>
+    <color name="on_accent">#FFFFFF</color>
+    <color name="danger">#FE3D16</color>
+    <color name="focus">#313236</color>
+    <color name="scrim">#33131417</color>
+    <color name="toast">#1D1E21</color>
+    <color name="on_toast">#FFFFFF</color>
+
+    <!-- 앱 아이콘 바탕: 현대 블루(brand) -->
+    <color name="ic_launcher_background">#002C5F</color>
 </resources>

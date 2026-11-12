@@ -5,6 +5,7 @@ import ai.pleos.playground.navi.constants.RouteOption
 import ai.pleos.playground.navi.data.DestinationArrivedInfo
 import ai.pleos.playground.navi.data.DrivingInfo
 import ai.pleos.playground.navi.data.RouteStartInfo
+import ai.pleos.playground.navi.data.RouteWithWaypointsRequest
 import ai.pleos.playground.navi.data.TBTInfo
 import ai.pleos.playground.navi.helper.NaviHelper
 import ai.pleos.playground.navi.helper.listener.NaviHelperEventListener
@@ -12,7 +13,7 @@ import android.content.Context
 
 /**
  * 순정 내비와 잇는 곳 (NaviHelper).
- * - 고른 경로를 같은 목적지의 경로 옵션으로 요청함
+ * - 내 길은 경유지를 넣어 요청하고(requestRouteWithWaypoints), 다른 후보는 경로 옵션으로 요청함(requestRoute)
  * - 경로 시작·재탐색·도착·남은 시간을 받아 주행 화면에 씀
  */
 class Navi {
@@ -56,7 +57,7 @@ class Navi {
         }
 
         override fun onError(errorCode: NaviErrorCode) = App.ui {
-            App.log.add(SRC, "오류 ${errorCode.name}")
+            App.onNaviError("오류 ${errorCode.name}")
         }
     }
 
@@ -76,18 +77,36 @@ class Navi {
         }
     }
 
-    /** 같은 목적지를 고른 경로의 옵션으로 요청함. */
-    fun guide(route: Route) {
+    /** 고른 길을 순정 내비에 넣음. 보냈으면 true. 결과는 onRouteStarted·onError로 옴. */
+    fun guide(route: Route): Boolean {
         val h = helper
         if (h == null) {
             App.log.add(SRC, "순정 내비가 없어 안내를 요청하지 못함")
-            return
+            return false
         }
-        try {
-            h.requestRoute(DemoTrip.destination(route.option))
-            App.log.add(SRC, "requestRoute(${DemoTrip.DEST_NAME}, ${route.optionName}) 보냄")
+        return try {
+            val dest = DemoTrip.destination(route.option)
+            val via = route.via
+            if (via != null) {
+                h.requestRouteWithWaypoints(RouteWithWaypointsRequest(dest, listOf(DemoTrip.waypoint(via))))
+                App.log.add(SRC, "requestRouteWithWaypoints(${DemoTrip.DEST_NAME}, 경유 ${via.name}) 보냄")
+            } else {
+                h.requestRoute(dest)
+                App.log.add(SRC, "requestRoute(${DemoTrip.DEST_NAME}, ${optionName(route.option)}) 보냄")
+            }
+            true
         } catch (e: Throwable) {
             App.log.add(SRC, "경로 요청 실패: ${e.javaClass.simpleName}")
+            false
+        }
+    }
+
+    fun cancel() {
+        try {
+            helper?.cancelRoute()
+            App.log.add(SRC, "cancelRoute 보냄")
+        } catch (e: Throwable) {
+            App.log.add(SRC, "안내 취소 실패: ${e.javaClass.simpleName}")
         }
     }
 

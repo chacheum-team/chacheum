@@ -36,6 +36,16 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    // 화면 캡처 테스트(Robolectric)에서 앱 리소스·글꼴을 씀
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            all {
+                it.systemProperty("chacheum.shots", project.layout.buildDirectory.dir("screens").get().asFile.path)
+                System.getProperty("robolectric.dependency.repo.url")?.let { url -> it.systemProperty("robolectric.dependency.repo.url", url) }
+            }
+        }
+    }
 }
 
 dependencies {
@@ -45,4 +55,8 @@ dependencies {
     // Vehicle SDK가 실행 중에 kotlin-reflect를 씀. Kotlin 버전과 맞춤
     implementation("org.jetbrains.kotlin:kotlin-reflect:2.0.0")
     implementation("androidx.core:core-ktx:1.16.0")
+
+    // 화면 캡처 테스트: JVM에서 화면을 그려 PNG로 남김
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.robolectric:robolectric:4.14.1")
 }

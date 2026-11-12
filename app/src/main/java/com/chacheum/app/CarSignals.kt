@@ -39,7 +39,10 @@ class CarSignals {
     var steer = 0f
         private set
     private val seats = HashMap<String, Boolean>()
-    val passenger get() = seats.values.any { it }
+    /** 조수석에 누가 앉았는지(어른 동승자로 봄). */
+    val frontOccupied get() = seats[FRONT] == true
+    /** 뒷좌석에 누가 앉았는지(아이가 탄 것으로 봄. 경로 고르기에서 바로잡을 수 있음). */
+    val rearOccupied get() = seats[REAR_LEFT] == true || seats[REAR_RIGHT] == true
     var wiperOn = false
         private set
     var lightOn = false
@@ -77,9 +80,9 @@ class CarSignals {
         override fun onLightStateUpdated(state: LightState?) = App.ui { onLight(state == LightState.ON) }
         override fun onFailed(e: Exception) = fail("전조등", e)
     }
-    private val frontSeatListener = seatListener("조수석")
-    private val rearLeftListener = seatListener("뒷좌석 왼쪽")
-    private val rearRightListener = seatListener("뒷좌석 오른쪽")
+    private val frontSeatListener = seatListener(FRONT)
+    private val rearLeftListener = seatListener(REAR_LEFT)
+    private val rearRightListener = seatListener(REAR_RIGHT)
 
     private fun seatListener(name: String) = object : SeatOccupancyListener {
         override fun onSeatOccupancyUpdated(occupancy: Boolean?) = App.ui { onSeat(name, occupancy == true) }
@@ -122,9 +125,9 @@ class CarSignals {
         guard {
             v.getLight().getCurrentLowBeamLightState({ s -> App.ui { lightOn = s == LightState.ON; App.changed() } }, { })
         }
-        readSeat(v, "조수석", frontSeat)
-        readSeat(v, "뒷좌석 왼쪽", rearLeftSeat)
-        readSeat(v, "뒷좌석 오른쪽", rearRightSeat)
+        readSeat(v, FRONT, frontSeat)
+        readSeat(v, REAR_LEFT, rearLeftSeat)
+        readSeat(v, REAR_RIGHT, rearRightSeat)
         guard {
             v.getSteeringWheel().checkSteeringWheelAngleCapabilities(
                 { _, bounds ->
@@ -190,6 +193,7 @@ class CarSignals {
         if (next != restricted) {
             restricted = next
             App.log.add("AAOS", if (next) "주행 규제 켜짐 · 카드 한 장만 보임" else "주행 규제 꺼짐")
+            App.onRestricted()
         }
     }
 
@@ -204,6 +208,7 @@ class CarSignals {
         turn = t
         App.judge.onTurn(t)
         App.log.add("Vehicle", "깜빡이 ${turnName(t)}")
+        App.changed()
     }
 
     private fun onSteer(angle: Float?) {
@@ -232,18 +237,21 @@ class CarSignals {
         if (seats[name] == occupied) return
         seats[name] = occupied
         App.log.add("Vehicle", "$name ${if (occupied) "앉음" else "비어 있음"}")
+        App.changed()
     }
 
     private fun onWiper(on: Boolean) {
         if (on == wiperOn) return
         wiperOn = on
         App.log.add("Vehicle", "와이퍼 ${if (on) "켜짐" else "꺼짐"}")
+        App.changed()
     }
 
     private fun onLight(on: Boolean) {
         if (on == lightOn) return
         lightOn = on
         App.log.add("Vehicle", "전조등 ${if (on) "켜짐" else "꺼짐"}")
+        App.changed()
     }
 
     private fun fail(what: String, e: Exception) {
@@ -259,6 +267,10 @@ class CarSignals {
     }
 
     companion object {
+        const val FRONT = "조수석"
+        const val REAR_LEFT = "뒷좌석 왼쪽"
+        const val REAR_RIGHT = "뒷좌석 오른쪽"
+
         fun turnName(t: Turn) = when (t) {
             Turn.LEFT -> "왼쪽"
             Turn.RIGHT -> "오른쪽"
