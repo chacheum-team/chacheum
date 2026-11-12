@@ -6,13 +6,56 @@
 
 ## 실행 방법
 
-앱 코드를 올리면서 채움.
+1. Pleos Connect Emulator v2.1.0을 켬.
+2. APK를 설치함.
+   ```
+   adb install -r apk/<APK 파일>
+   ```
+3. 에뮬레이터 앱 목록에서 '차츰'을 엶.
+4. 순정 내비가 경로를 못 찾으면 에뮬레이터 위치를 서울로 옮기고 다시 시도함.
+   ```
+   adb emu geo fix 127.0276 37.4979
+   ```
+
+### 시연 순서
+
+1. 운전자 '나'를 고르면 운전 성향과 길 취향(좌회전 1번을 피하려고 몇 분까지 더 쓰는지)이 보임.
+2. [길 고르기]에서 후보 경로 세 개와 '내 길' 추천, 추천 이유를 봄.
+3. Virtual Console에서 뒷좌석 착석·와이퍼·전조등을 바꾸면 추천이 바로 바뀜.
+4. [이 길로 안내]를 누르면 모델이 그 선택을 배우고, 순정 내비에 그 경로 옵션으로 안내를 요청함.
+5. 기어를 D로 바꾸면 출발함. 기어 신호 없이 볼 때는 [기어 없이 출발 (시연)]을 누름.
+6. 주행 중 Virtual Console에서 깜빡이를 켜고 2~3초 뒤 조향각을 바꾸면 '깜빡이 먼저'를 판정함.
+7. 지난번에 지나쳤던 곳에 다가가면 300 m 앞에서 한 문장으로 안내함.
+8. 도착 후 기어를 P로 바꾸면 오늘 주행을 돌아봄. 다른 길로 갔으면 일부러였는지 물음.
+
+- 맨 위 '시연 모드'를 끄면 주행 진행과 도착을 순정 내비 이벤트로 받음. 켜 두면 주행 진행과 주의 지점을 시간표로 재생하고, 차 신호는 그대로 Virtual Console 값을 씀.
+- 제목 '차츰'을 길게 누르면 처음 상태로 돌아감.
 
 ## 테스트 환경
 
 - Pleos Connect Emulator v2.1.0 (Android API 34 시스템 이미지)
-- Android Studio, JDK 17, AGP 8.8.2, Kotlin 2.0.0, compileSdk·targetSdk 35
-- Pleos SDK: Vehicle 2.3.2, NaviHelper 3.0.5, FusedLocation 1.1.3
+- Android Studio, JDK 17, AGP 8.8.2, Kotlin 2.0.0, compileSdk·targetSdk 35, minSdk 28
+- Pleos SDK: Vehicle 2.3.2, NaviHelper 3.0.5
+- AAOS Car API: 기어(GEAR_SELECTION), 주행 규제(CarUxRestrictions)
+
+## 구성
+
+| 파일 | 하는 일 |
+|---|---|
+| `Model.kt` | 후보 경로, 운전자 프로필, 경로 선택 모델(조건부 로짓과 학습), 깜빡이 먼저 판정 |
+| `App.kt` | 앱 상태, 주행 흐름, 시연 모드 진행, 차 안 저장 |
+| `CarSignals.kt` | Vehicle SDK·AAOS로 차 신호 받기 |
+| `Navi.kt` | NaviHelper로 순정 내비에 경로 요청, 이벤트 받기 |
+| `Speaker.kt` | 한 문장 음성 안내 |
+| `MainActivity.kt`, `Ui.kt` | 화면 |
+
+### 경로 선택 모델
+
+- 경로 r의 효용: U(r) = w_t·시간 + w_l·좌회전 수 + w_f·익숙함
+- 고를 확률: P(r) = exp U(r) / Σ exp U
+- 고른 경로 r*로 배우기: w ← w + η(x(r*) − Σ P(r)·x(r)) − λ(w − w₀), η = 0.01, λ = 0.1
+- 상황 보정: 동승자가 있으면 w_l, 비·밤이면 w_f에 더함
+- 좌회전 1번을 피하려고 더 쓰는 분 = w_l ÷ w_t
 
 ## APK 위치
 
