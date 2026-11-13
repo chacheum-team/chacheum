@@ -11,6 +11,10 @@
    ```
    adb install -r apk/<APK 파일>
    ```
+   debug APK가 깔려 있으면 release APK는 서명이 달라 덮어 깔리지 않음. 먼저 지우고 설치함.
+   ```
+   adb uninstall com.chacheum.app
+   ```
 3. 시연 전에 Virtual Console에서 기어를 P로, 'Seat Occupancy'의 좌석을 모두 비움(그래야 '혼자'로 시작함).
 4. 에뮬레이터 앱 목록에서 '차츰'을 엶.
 
@@ -53,6 +57,7 @@ JVM(Robolectric)에서 시연 흐름을 따라가며 화면을 PNG로 남김. �
 - Android Studio, JDK 17, AGP 8.8.2, Kotlin 2.0.0, compileSdk·targetSdk 35, minSdk 28
 - Pleos SDK: Vehicle 2.3.2, NaviHelper 3.0.5
 - AAOS Car API: 기어(GEAR_SELECTION), 주행 규제(CarUxRestrictions)
+- 에뮬레이터의 순정 내비 지도에는 도로·지명이 안 보이고 땅과 바다만 보임. 순정 내비가 42dot 지도 서버에서 빈 지도 스타일(`connect_empty`)을 받기 때문이며, 차츰과는 관계없음(2026-11-13 logcat으로 확인). 차츰이 보낸 경로 요청은 순정 내비에 들어감.
 
 ## 구성
 
