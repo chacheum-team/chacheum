@@ -9,6 +9,10 @@ captures/
 .externalNativeBuild/
 .cxx/
 
+# Android Studio의 Generate Signed APK가 모듈 폴더에 만드는 결과물
+app/release/
+app/debug/
+
 # 서명 키와 API 키는 올리지 않음
 *.jks
 *.keystore
