@@ -215,7 +215,7 @@ object App {
         goHome()
     }
 
-    // ---- 누가 운전해요? ----
+    // ---- 누가 운전하나요? ----
     private var askedWho = false
     private var whoTimer: Runnable? = null
 
@@ -223,7 +223,7 @@ object App {
     fun onWhoShown() {
         if (askedWho) return
         askedWho = true
-        speaker?.say("누가 운전해요?")
+        speaker?.say("누가 운전하나요?")
         val r = Runnable {
             whoTimer = null
             if (screen == Screen.WHO && driver == null) {

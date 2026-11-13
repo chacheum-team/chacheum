@@ -80,7 +80,7 @@ class Screens(
     }
 
     // -----------------------------------------------------------------------
-    // 1. 누가 운전해요?
+    // 1. 누가 운전하나요?
     // -----------------------------------------------------------------------
 
     private fun who(): Page {
@@ -110,7 +110,7 @@ class Screens(
             })
         }
         val body = body().apply {
-            addView(ui.headline("누가 운전해요?"))
+            addView(ui.headline("누가 운전하나요?"))
             addView(grid)
             if (App.speaker?.speaking == true) addView(ui.voice(Ic.SPEAKER, "말하는 중", null, true), ui.wrap())
         }
