@@ -3,6 +3,14 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
+// release 서명 정보는 환경 변수로만 받음(GitHub Actions가 Secrets에서 넣음). 레포와 파일에는 두지 않음.
+// RELEASE_KEYSTORE_FILE이 없으면 서명 없는 release(app-release-unsigned.apk)가 나옴.
+val releaseKeystoreFile: String? = System.getenv("RELEASE_KEYSTORE_FILE")?.takeIf { it.isNotBlank() }
+
+fun releaseSigningEnv(name: String): String =
+    System.getenv(name)?.takeIf { it.isNotBlank() }
+        ?: throw GradleException("release 서명: 환경 변수 $name 이 비어 있음")
+
 android {
     namespace = "com.chacheum.app"
     compileSdk = 35
@@ -18,9 +26,21 @@ android {
         versionName = "0.1.0"
     }
 
+    signingConfigs {
+        if (releaseKeystoreFile != null) {
+            create("release") {
+                storeFile = file(releaseKeystoreFile)
+                storePassword = releaseSigningEnv("RELEASE_KEYSTORE_PASSWORD")
+                keyAlias = releaseSigningEnv("RELEASE_KEY_ALIAS")
+                keyPassword = releaseSigningEnv("RELEASE_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.findByName("release")
         }
     }
 

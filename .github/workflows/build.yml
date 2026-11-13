@@ -1,0 +1,105 @@
+# 올릴 때마다 debug 빌드, 화면 캡처 테스트, release 빌드를 돌림.
+# 서명 키 Secrets(RELEASE_KEYSTORE_BASE64, RELEASE_KEYSTORE_PASSWORD, RELEASE_KEY_ALIAS, RELEASE_KEY_PASSWORD)가
+# 있으면 release APK를 서명해 artifact 'release-apk'로 남기고, 없으면 서명 없이 빌드만 확인함.
+# artifact는 비공개 저장소의 저장 한도(500MB)를 넘지 않게 며칠만 둠.
+name: 빌드
+
+on:
+  push:
+    branches: [main]
+    # 문서와 올려 둔 APK만 바뀐 푸시는 돌리지 않음
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "apk/**"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: 빌드·화면 캡처·release APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: 코드 받기
+        uses: actions/checkout@v6
+
+      - name: JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: debug 빌드
+        run: ./gradlew --no-daemon --stacktrace assembleDebug
+
+      - name: 화면 캡처 테스트
+        run: ./gradlew --no-daemon --stacktrace :app:testDebugUnitTest
+
+      - name: 화면 캡처 올리기
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: screens
+          path: app/build/screens
+          if-no-files-found: warn
+          retention-days: 5
+
+      - name: 테스트 보고서 올리기 (실패했을 때)
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-report
+          path: |
+            app/build/reports/tests
+            app/build/test-results
+          if-no-files-found: ignore
+          retention-days: 3
+
+      - name: debug APK 올리기
+        uses: actions/upload-artifact@v7
+        with:
+          name: debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 3
+
+      # 서명 키는 Secrets에서만 받아 러너의 임시 폴더에 풂. PR에서는 서명하지 않음
+      - name: 서명 키 준비
+        id: signing
+        if: github.event_name != 'pull_request'
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        run: bash .github/scripts/prepare-signing.sh
+
+      - name: release 빌드
+        env:
+          RELEASE_KEYSTORE_FILE: ${{ steps.signing.outputs.keystore }}
+          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        run: ./gradlew --no-daemon --stacktrace assembleRelease
+
+      - name: 서명 키 지우기
+        if: always()
+        run: rm -f "${RUNNER_TEMP:?}/release.jks"
+
+      - name: release APK 서명 확인
+        if: steps.signing.outputs.signed == 'true'
+        run: bash .github/scripts/verify-release.sh
+
+      - name: release APK 올리기
+        if: steps.signing.outputs.signed == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-apk
+          path: app/build/outputs/apk/release/chacheum-release.apk
+          if-no-files-found: error
+          retention-days: 5
