@@ -21,7 +21,8 @@ permissions:
 jobs:
   build:
     name: 빌드·화면 캡처·release APK
-    runs-on: ubuntu-latest
+    # ubuntu-latest가 24.04에서 26.04로 넘어가는 중이라, 빌드가 통과한 26.04로 고정
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     steps:
       - name: 코드 받기
