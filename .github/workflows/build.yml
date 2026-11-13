@@ -94,6 +94,9 @@ jobs:
 
       - name: release APK 서명 확인
         if: steps.signing.outputs.signed == 'true'
+        env:
+          # 차츰 release 서명 인증서의 SHA-256 지문(APK에 들어 있는 공개 정보). 다른 키로 서명되면 실패함
+          EXPECTED_CERT_SHA256: 3b784bcb6fd7212ac8aa791539166473d05ea98c992414982d502581bf82b7e1
         run: bash .github/scripts/verify-release.sh
 
       - name: release APK 올리기
